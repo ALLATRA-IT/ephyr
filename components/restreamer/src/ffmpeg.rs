@@ -2,6 +2,9 @@
 //!
 //! [FFmpeg]: https://ffmpeg.org
 
+use derive_more::From;
+use ephyr_log::{log, Drain as _};
+use futures::{future, pin_mut, FutureExt as _, TryFutureExt as _};
 use std::{
     borrow::Cow,
     collections::HashMap,
@@ -11,10 +14,6 @@ use std::{
     sync::Arc,
     time::Duration,
 };
-
-use derive_more::From;
-use ephyr_log::{log, Drain as _};
-use futures::{future, pin_mut, FutureExt as _, TryFutureExt as _};
 use tokio::{io, process::Command, sync::Mutex, time};
 use url::Url;
 use uuid::Uuid;
@@ -25,6 +24,7 @@ use crate::{
     teamspeak,
 };
 use std::result::Result::Err;
+use tsclientlib::Identity;
 
 /// Pool of [FFmpeg] processes performing re-streaming of a media traffic.
 ///
@@ -249,7 +249,7 @@ impl Restreamer {
                         pin_mut!(running);
 
                         let set_online = async move {
-                            time::delay_for(Duration::from_secs(5)).await;
+                            time::sleep(Duration::from_secs(5)).await;
                             kind.renew_status(Status::Online, state);
                             future::pending::<()>().await;
                             Ok(())
@@ -280,7 +280,7 @@ impl Restreamer {
                     );
                 });
 
-                time::delay_for(Duration::from_secs(2)).await;
+                time::sleep(Duration::from_secs(2)).await;
             }
         });
 
@@ -1085,19 +1085,41 @@ impl Mixin {
 
                     let channel = state.src.path().trim_start_matches('/');
 
-                    let name = state
-                        .src
-                        .query_pairs()
-                        .find_map(|(k, v)| {
-                            (k == "name").then(|| v.into_owned())
-                        })
-                        .or_else(|| label.map(|l| format!("🤖 {}", l)))
+                    let query: HashMap<_, _> =
+                        state.src.query_pairs().into_owned().collect();
+                    let name = query
+                        .get("name")
+                        .map_or_else(
+                            || label.map(|l| format!("🤖 {}", l)),
+                            |v| Some(v.to_string()),
+                        )
                         .unwrap_or_else(|| format!("🤖 {}", state.id));
 
-                    Some(Arc::new(Mutex::new(teamspeak::Input::new(
+                    let identity = query.get("identityId").map_or_else(
+                        || {
+                            log::debug!("No identityId use random");
+                            Ok(Identity::create())
+                        },
+                        |v| {
+                            log::debug!("Create Identity for: {}", v);
+                            Identity::new_from_str(v)
+                        },
+                    );
+
+                    let ts_connection =
                         teamspeak::Connection::build(host.into_owned())
                             .channel(channel.to_owned())
-                            .name(name),
+                            .name(name);
+
+                    let ts_connection = match identity {
+                        Ok(ide) => ts_connection.identity(ide),
+                        Err(e) => {
+                            log::error!("Failed creating of Identity: {}", e);
+                            ts_connection
+                        }
+                    };
+                    Some(Arc::new(Mutex::new(teamspeak::Input::new(
+                        ts_connection,
                     ))))
                 })
             })

@@ -7,9 +7,10 @@ publish = false
 default-run = "ephyr-restreamer"
 
 [dependencies]
-actix-service = "1.0"
-actix-web = "3.3"
-actix-web-httpauth = "0.5"
+actix-service = "2.0"
+actix-web = "4.0.0-beta.6"
+#actix-web-httpauth = "0.6.0-beta.1" use working fork
+# https://github.com/actix/actix-extras/issues/176#issuecomment-830658605
 actix-web-static-files = "3.0"
 anyhow = "1.0"
 argon2 = { version = "0.8", package = "rust-argon2", default-features = false }
@@ -24,8 +25,8 @@ humantime = "2.1"
 juniper = "0.15"
 juniper_actix = { version = "0.2", features = ["subscriptions"] }
 juniper_graphql_ws = "0.2"
-once_cell = { version = "1.4", features = ["parking_lot"] }
-public-ip = "0.1"
+once_cell = { version = "1.7", features = ["parking_lot"] }
+public-ip = "0.2"
 rand = "0.8"
 regex = "1.4"
 reqwest = { version = "0.11", features = ["json"], default-features = false }
@@ -35,6 +36,7 @@ serde_humantime = { version = "1.0", package = "humantime-serde" }
 serde_json = "1.0"
 smart-default = "0.6"
 structopt = "0.3"
+tokio-stream = { version="0.1", features = ["fs"]}
 url = { version = "2.1", features = ["serde"] }
 uuid = { version = "0.8", features = ["serde", "v4"] }
 [dependencies.derive_more]
@@ -42,17 +44,20 @@ uuid = { version = "0.8", features = ["serde", "v4"] }
     features = ["as_ref", "deref", "display", "error", "from"]
     default-features = false
 [dependencies.tokio]
-    version = "0.2"
-    features = ["fs", "io-util", "process", "rt-core", "stream", "sync", "time"]
+    version = "1"
+    features = ["fs", "io-util", "process", "rt", "sync", "time"]
 [dependencies.tsclientlib]
     git = "https://github.com/ReSpeak/tsclientlib"
-    rev = "ee95d775ad6dda552847bf9f484ab3ff1a70f833" # branch = "master"
+    rev = "c7fa1c070b8ea0d56530ffba530b86df9b3a377a" # ver = "0.2.0"
 [dependencies.tsproto-packets]
     git = "https://github.com/ReSpeak/tsclientlib"
-    rev = "ee95d775ad6dda552847bf9f484ab3ff1a70f833" # branch = "master"
+    rev = "c7fa1c070b8ea0d56530ffba530b86df9b3a377a" # ver = "0.2.0"
 [dependencies.zeromq]
     git = "https://github.com/zeromq/zmq.rs"
-    rev = "5bc792a5b8876d7281e9bd933519d49a62b76caf" # tokio = "0.2"
+    rev = "ad9ee2c3d46e6b90c91827dcb7760b7a28071b97" # tokio = "1.0"
+[dependencies.actix-web-httpauth]
+    git = "https://github.com/near/actix-extras"
+    rev = "cdae476d490b4e79f73cf7ea583237272bcc2e1c"
 
 [build-dependencies]
 anyhow = "1.0"

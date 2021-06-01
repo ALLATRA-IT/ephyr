@@ -56,7 +56,7 @@ pub async fn run(mut cfg: Opts) -> Result<(), Failure> {
         &state.restreams,
         |restreams| async move {
             // Wait for all the re-streaming processes to release DVR files.
-            time::delay_for(Duration::from_secs(1)).await;
+            time::sleep(Duration::from_secs(1)).await;
             dvr::Storage::global().cleanup(&restreams).await;
         },
     );
@@ -555,14 +555,5 @@ pub mod callback {
 ///
 /// See [`public_ip`] crate for details.
 pub async fn detect_public_ip() -> Option<IpAddr> {
-    use public_ip::{dns, http, BoxToResolver, ToResolver as _};
-
-    public_ip::resolve_address(
-        vec![
-            BoxToResolver::new(dns::OPENDNS_RESOLVER),
-            BoxToResolver::new(http::HTTP_IPIFY_ORG_RESOLVER),
-        ]
-        .to_resolver(),
-    )
-    .await
+    public_ip::addr().await
 }

@@ -28,7 +28,7 @@ use futures::{
 use once_cell::sync::Lazy;
 use rand::Rng as _;
 use tokio::{
-    io::{self, AsyncRead},
+    io::{self, AsyncRead, ReadBuf},
     task::JoinHandle,
     time,
 };
@@ -203,8 +203,8 @@ impl AsyncRead for Input {
     fn poll_read(
         mut self: Pin<&mut Self>,
         cx: &mut Context<'_>,
-        buf: &mut [u8],
-    ) -> Poll<io::Result<usize>> {
+        buf: &mut ReadBuf<'_>,
+    ) -> Poll<io::Result<()>> {
         if self.conn.is_none() {
             self.spawn_audio_capturing();
         }
@@ -215,7 +215,7 @@ impl AsyncRead for Input {
         if self.cursor >= self.frame.len() {
             // `time::Interval` stream never returns `None`, so we can omit
             // checking it to be finished.
-            let _ = ready!(Pin::new(&mut self.ticker).poll_next(cx));
+            let _ = ready!(&mut self.ticker.poll_tick(cx));
 
             self.cursor = 0;
             self.frame.fill(0.0);
@@ -234,21 +234,18 @@ impl AsyncRead for Input {
         let src_size = self.frame.len() - cursor;
 
         // `f32` takes 4 bytes in big endian, so we should fit in there.
-        let dst_size = buf.len() / 4;
+        let dst_size = buf.remaining() / 4;
         if dst_size == 0 {
             return Poll::Ready(Err(InputError::TooSmallBuffer.into()));
         }
 
         let size = src_size.min(dst_size);
-        let size_in_bytes = size * 4;
 
-        BigEndian::write_f32_into(
-            &self.frame[cursor..(cursor + size)],
-            &mut buf[..size_in_bytes],
-        );
+        let unfilled = buf.initialize_unfilled();
+        BigEndian::write_f32_into(&self.frame[cursor..cursor + size], unfilled);
         self.cursor += size;
 
-        Poll::Ready(Ok(size_in_bytes))
+        Poll::Ready(Ok(()))
     }
 }
 

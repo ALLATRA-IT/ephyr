@@ -26,7 +26,7 @@ serde_millis = "0.1"
 smart-default = "0.6"
 structopt = "0.3"
 tempfile = "3.1"
-tokio-util = { version = "0.3", features = ["compat"] }
+tokio-util = { version = "0.6", features = ["compat"] }
 url = { version = "2.1", features = ["serde"] }
 [dependencies.derive_more]
     version = "0.99.11"

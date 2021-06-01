@@ -322,7 +322,7 @@
             class="uk-input"
             type="text"
             bind:value={mix_url}
-            placeholder="ts://<teamspeak-host>:<port>/<channel>?name=<name>"
+            placeholder="ts://<teamspeak-host>:<port>/<channel>?name=<name>&identityId=<identityId>"
           />
         {/each}
 
@@ -349,6 +349,8 @@
             <br />
             If <code>name</code> is not specified than the label value will be used,
             if any, or a random generated one.
+            <br />
+            If <code>identityId</code> is not specified than the a random generated one.
           </div>
         {/if}
       </fieldset>

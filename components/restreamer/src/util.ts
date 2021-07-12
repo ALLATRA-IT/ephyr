@@ -71,11 +71,11 @@ export function sanitizeUrl(url: string): string {
 
 /**
  * Checks whether the given location page corresponds to
- * `/restream/:restream_id/output/:output_id` route.
- *
- * @param location    Location to be checked.
+ * `/restream/#/id/:restream_id/output/:output_id` route.
  */
-export function isOutputPage(location: string): boolean {
-  const p = location.split('/');
-  return p[1] === 'restream' && p[3] === 'output';
+export function isOutputPage(): boolean {
+  const pathname = window.location.pathname;
+  const p = window.location.hash.split('/');
+
+  return pathname === '/restream/' && p[3] === 'output';
 }

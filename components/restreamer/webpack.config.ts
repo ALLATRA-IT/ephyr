@@ -11,7 +11,8 @@ const mode = is_prod ? 'production' : 'development';
 
 const config: webpack.Configuration = {
   entry: {
-    bundle: ['./src/main.ts'],
+    main: './src/main.ts',
+    'restream/main': './src/restream.ts',
   },
   resolve: {
     alias: {
@@ -61,11 +62,16 @@ const config: webpack.Configuration = {
   },
   mode,
   plugins: [
+    new CopyPlugin({
+      patterns: [
+        { from: 'static/index.html' },
+        { from: 'static/restream', to: 'restream' },
+        { from: 'static/assets', to: 'restream' },
+        { from: 'static/assets' },
+      ],
+    }),
     new MiniCssExtractPlugin({
       filename: '[name].css',
-    }),
-    new CopyPlugin({
-      patterns: [{ from: 'static' }],
     }),
     new webpack.EnvironmentPlugin({
       VERSION: process.env.CARGO_PKG_VERSION || process.env.npm_package_version,

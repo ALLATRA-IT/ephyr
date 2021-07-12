@@ -150,5 +150,6 @@
     display: flex
 
   .endpoint .endpoint-status-icon
+    flex-shrink: 0
     margin-right: 5px
 </style>

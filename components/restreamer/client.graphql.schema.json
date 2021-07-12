@@ -828,6 +828,20 @@
                   "ofType": null
                 },
                 "defaultValue": null
+              },
+              {
+                "name": "kind",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "PasswordKind",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null
               }
             ],
             "type": {
@@ -1193,6 +1207,29 @@
         "inputFields": null,
         "interfaces": [],
         "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "ENUM",
+        "name": "PasswordKind",
+        "description": "Specifies kind of password",
+        "fields": null,
+        "inputFields": null,
+        "interfaces": null,
+        "enumValues": [
+          {
+            "name": "MAIN",
+            "description": "Password for main application",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "OUTPUT",
+            "description": "Password for single output application",
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
         "possibleTypes": null
       },
       {
@@ -2175,6 +2212,18 @@
           {
             "name": "passwordHash",
             "description": "[Argon2] hash of the password that this server's GraphQL API is\nprotected with, if any.\n\nNon-`null` value means that any request to GraphQL API should perform\n[HTTP Basic auth][1]. Any username is allowed, but the password should\nmatch this hash.\n\n[Argon2]: https://en.wikipedia.org/wiki/Argon2\n[1]: https://en.wikipedia.org/wiki/Basic_access_authentication",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "passwordOutputHash",
+            "description": "Password hash for single output application",
             "args": [],
             "type": {
               "kind": "SCALAR",

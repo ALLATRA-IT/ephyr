@@ -116,8 +116,8 @@ For release specific version we need to:
 2. Update version in `Cargo.toml`;
 3. Update versions in `docs`;
 4. Add tag `restreamer-v0.0.0` or so;
-5. Push branch with tags.
-6. Add announce in https://t.me/ephyr_updates
+5. Push branch with tags;
+6. Add announce in https://t.me/ephyr_updates .
 
 
 

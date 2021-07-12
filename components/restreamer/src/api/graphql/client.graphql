@@ -5,6 +5,7 @@ subscription Info {
         deleteConfirmation
         enableConfirmation
         passwordHash
+        passwordOutputHash
     }
 }
 
@@ -187,8 +188,8 @@ mutation RemoveDvrFile($path: String!) {
     removeDvrFile(path: $path)
 }
 
-mutation SetPassword($new: String, $old: String) {
-    setPassword(new: $new, old: $old)
+mutation SetPassword($new: String, $old: String, $kind: PasswordKind!) {
+    setPassword(new: $new, old: $old, kind: $kind)
 }
 
 mutation SetSettings(

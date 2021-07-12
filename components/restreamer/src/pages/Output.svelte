@@ -10,9 +10,21 @@
     {#if restream.id === params.restream_id}
       {#each restream.outputs as output}
         {#if output.id === params.output_id}
-          <Output restream_id={restream.id} value={output} />
+          <section class="uk-section uk-section-muted single-output">
+            <Output restream_id={restream.id} value={output} />
+          </section>
         {/if}
       {/each}
     {/if}
   {/each}
 </template>
+
+<style lang="stylus">
+  .single-output
+    margin-top: 20px
+    padding: 10px 20px 20px 20px
+    max-width: 960px
+
+    :global(.volume input)
+        width: 90% !important
+</style>

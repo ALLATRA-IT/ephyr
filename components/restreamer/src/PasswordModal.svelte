@@ -8,9 +8,12 @@
 
   export let visible = false;
   export let current_hash;
+  export let password_kind;
+
   let new_password = '';
   let rep_password = '';
   let old_password = '';
+  let protecting_page_name = password_kind.toLowerCase();
 
   $: change_submitable =
     new_password !== '' &&
@@ -28,7 +31,7 @@
   async function submit_change() {
     if (!change_submitable) return;
 
-    let vars = { new: new_password };
+    let vars = { new: new_password, kind: password_kind };
     if (!!current_hash) {
       vars.old = old_password;
     }
@@ -45,7 +48,9 @@
   async function submit_remove() {
     if (!remove_submitable) return;
     try {
-      await setPasswordMutation({ variables: { old: old_password } });
+      await setPasswordMutation({
+        variables: { old: old_password, kind: password_kind },
+      });
       close();
     } catch (e) {
       showError(e.message);
@@ -61,9 +66,9 @@
     <div class="uk-modal-dialog uk-modal-body">
       <h2 class="uk-modal-title">
         {#if !current_hash}
-          Protect page with password
+          {`Protect ${protecting_page_name} page with password`}
         {:else}
-          Change password
+          {`Change ${protecting_page_name} page password`}
         {/if}
       </h2>
       <button

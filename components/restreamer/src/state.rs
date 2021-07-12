@@ -37,6 +37,10 @@ pub struct Settings {
     /// public APIs.
     pub password_hash: Option<String>,
 
+    /// [`argon2`] hash of password which protects access to single output
+    /// application's public APIs.
+    pub password_output_hash: Option<String>,
+
     /// Title for the server
     /// It is used for differentiating servers on UI side if multiple servers
     /// are used.
@@ -76,6 +80,7 @@ impl Default for Settings {
     fn default() -> Settings {
         Settings {
             password_hash: None,
+            password_output_hash: None,
             title: None,
             delete_confirmation: Some(true),
             enable_confirmation: Some(true),
@@ -1888,6 +1893,16 @@ where
     fn from_str(value: ScalarToken<'_>) -> ParseScalarResult<'_, S> {
         <String as ParseScalarValue<S>>::from_str(value)
     }
+}
+
+/// Specifies kind of password
+#[derive(Clone, Copy, Debug, Eq, GraphQLEnum, PartialEq)]
+pub enum PasswordKind {
+    /// Password for main application
+    Main,
+
+    /// Password for single output application
+    Output,
 }
 
 /// Status indicating availability of an `Input`, `Output`, or a `Mixin`.

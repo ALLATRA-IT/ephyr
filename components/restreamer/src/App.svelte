@@ -6,45 +6,28 @@
   import { onDestroy } from 'svelte';
   import { get } from 'svelte/store';
   import { setClient, subscribe } from 'svelte-apollo';
-  import Router, { replace, location, link } from 'svelte-spa-router';
+  import Router, { link, location, replace } from 'svelte-spa-router';
   import { wrap } from 'svelte-spa-router/wrap';
-  import cloneDeep from 'lodash/cloneDeep';
 
-  import {
-    ExportAllRestreams,
-    Info,
-    State,
-  } from './api/graphql/client.graphql';
+  import { Info, State } from './api/graphql/client.graphql';
+  import { showError } from './util';
 
-  import { showError, isOutputPage } from './util';
+  export let mainComponent;
+  export let toolbarComponent;
+  export let apiUrl;
 
   import UIkit from 'uikit';
   import Icons from 'uikit/dist/js/uikit-icons';
 
-  import { restreamModal, exportModal } from './stores';
-
-  import RestreamModal from './RestreamModal.svelte';
-  import OutputModal from './OutputModal.svelte';
-  import PasswordModal from './PasswordModal.svelte';
-  import ExportModal from './ExportModal.svelte';
-
-  import * as PageAll from './pages/All.svelte';
   import * as PageOutput from './pages/Output.svelte';
-  import SettingsModal from './SettingsModal.svelte';
 
   UIkit.use(Icons);
 
   let isOnline = true;
 
+  const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
   const wsClient = new SubscriptionClient(
-    !!process.env.WEBPACK_DEV_SERVER
-      ? 'ws://127.0.0.1/api'
-      : 'ws' +
-        (window.location.protocol === 'https:' ? 's' : '') +
-        '://' +
-        window.location.host +
-        window.location.pathname.replace(/\/?$/g, '') +
-        '/api',
+    `${protocol}://${window.location.hostname}${apiUrl}`,
     { reconnect: true }
   );
   wsClient.onConnected(() => {
@@ -80,33 +63,8 @@
     })
   );
 
-  let openPasswordModal = false;
-  let openSettingsModal = false;
-
-  async function openExportModal() {
-    let resp;
-    try {
-      resp = await gqlClient.query({
-        query: ExportAllRestreams,
-        fetchPolicy: 'no-cache',
-      });
-    } catch (e) {
-      showError(e.message);
-      return;
-    }
-
-    if (!!resp.data) {
-      exportModal.open(
-        null,
-        resp.data.export
-          ? JSON.stringify(JSON.parse(resp.data.export), null, 2)
-          : ''
-      );
-    }
-  }
-
   const routes = {
-    '/restream/:restream_id/output/:output_id': wrap({
+    '/id/:restream_id/output/:output_id': wrap({
       component: PageOutput,
       props: {
         state,
@@ -128,7 +86,7 @@
       ],
     }),
     '*': wrap({
-      component: PageAll,
+      component: mainComponent,
       props: {
         info,
         state,
@@ -153,77 +111,13 @@
         </a>
         <div class="uk-margin-auto-left">
           {#if isOnline && $info.data}
-            <a
-              href="/"
-              class="set-settings"
-              on:click|preventDefault={() => (openSettingsModal = true)}
-            >
-              <i class="fas fa-edit" title="Set title" />
-            </a>
-            {#if openSettingsModal}
-              <SettingsModal
-                info={cloneDeep($info.data.info)}
-                bind:visible={openSettingsModal}
-              />
-            {/if}
-            {#key $info.data.info.passwordHash}
-              <a
-                href="/"
-                class="set-password"
-                on:click|preventDefault={() => (openPasswordModal = true)}
-              >
-                <i
-                  class="fas"
-                  class:fa-lock-open={!$info.data.info.passwordHash}
-                  class:fa-lock={!!$info.data.info.passwordHash}
-                  title="{!$info.data.info.passwordHash
-                    ? 'Set'
-                    : 'Change'} password"
-                />
-              </a>
-              {#if openPasswordModal}
-                <PasswordModal
-                  current_hash={$info.data.info.passwordHash}
-                  bind:visible={openPasswordModal}
-                />
-              {/if}
-            {/key}
-            {#if isOutputPage($location)}
-              <a
-                href="/"
-                class="back-to-all"
-                use:link
-                title="Return back to all definitions"
-              >
-                <i class="fas fa-th" />
-              </a>
-            {/if}
-            <OutputModal />
-
-            {#if !isOutputPage($location)}
-              <div class="add-input">
-                <button
-                  class="uk-button uk-button-primary"
-                  on:click={() => restreamModal.openAdd()}
-                >
-                  <i class="fas fa-plus" />&nbsp;<span>Input</span>
-                </button>
-
-                {#if isOnline && $state.data}
-                  <ExportModal />
-                  <a
-                    class="export-import-all"
-                    href="/"
-                    on:click|preventDefault={openExportModal}
-                    title="Export/Import all"
-                  >
-                    <i class="fas fa-share-square" />
-                  </a>
-                {/if}
-
-                <RestreamModal public_host={$info.data.info.publicHost} />
-              </div>
-            {/if}
+            <svelte:component
+              this={toolbarComponent}
+              info={$info}
+              state={$state}
+              {isOnline}
+              {gqlClient}
+            />
           {:else if $info.error}
             {showError($info.error.message) || ''}
           {/if}
@@ -271,26 +165,6 @@
   header
     padding: 10px
 
-    button
-    .set-password, .set-settings
-      margin-right: 26px
-
-    .back-to-all
-      margin-top: 2px
-
-    .set-password, .set-settings, .back-to-all
-      font-size: 26px
-      color: var(--primary-text-color)
-      outline: none
-      &:hover
-        text-decoration: none
-        color: #444
-
-    .add-input
-      position: relative
-      display: inline-block
-      vertical-align: top
-
     .logo
       outline: none
       position: relative
@@ -312,23 +186,6 @@
         bottom: -6px
         left: 83px
         color: #999
-
-    .export-import-all
-      position: absolute
-      top: 6px
-      right: -24px
-      opacity: 0
-      transition: opacity .3s ease
-      color: var(--primary-text-color)
-      outline: none
-      &:hover
-        text-decoration: none
-        color: #444
-        opacity: 1
-
-    &:hover
-      .export-import-all
-        opacity: 1
 
   main
     > .loading
